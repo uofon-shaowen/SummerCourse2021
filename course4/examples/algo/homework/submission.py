@@ -49,10 +49,15 @@ action_dim = 4
 hidden_size = 64
 
 # Once start to train, u can get saved model. Here we just say it is critic.pth.
-critic_net = os.path.dirname(os.path.abspath(__file__)) + os.sep + 'critic_1_10000.pth'
-agent = IQL(state_dim, action_dim, hidden_size)
-agent.load(critic_net)
+critic_net0 = os.path.dirname(os.path.abspath(__file__)) + os.sep + 'critic_0_50000.pth'
+critic_net1 = os.path.dirname(os.path.abspath(__file__)) + os.sep + 'critic_1_50000.pth'
+agent0 = IQL(state_dim, action_dim, hidden_size)
+agent1 = IQL(state_dim, action_dim, hidden_size)
 
+agent0.load(critic_net0)
+agent1.load(critic_net1)
+isfirst = True
+firstagent = 0
 
 def build_current_observation(observation):
     pass
@@ -60,9 +65,18 @@ def build_current_observation(observation):
 
 # todo
 def my_controller(observation, action_space, is_act_continuous=False):
-    print(observation)
     next_state = get_observations_sw(observation, 0, obs_dim=state_dim)
-    action = agent.choose_action(next_state)
+    global isfirst,firstagent
+    if isfirst:
+        firstagent = observation['controlled_snake_index']
+        action = agent0.choose_action(next_state)
+        isfirst = False
+    else:
+        if firstagent == observation['controlled_snake_index']:
+            action = agent0.choose_action(next_state)
+        else:
+            action = agent1.choose_action(next_state)
+
     return action_from_algo_to_env(action)
 
 
@@ -76,7 +90,6 @@ def get_observations_sw(state, id, obs_dim):
     for key, value in snakes_positions.items():
         snakes_positions_list.append(value)
     snake_map = make_grid_map_sw(board_width, board_height, beans_positions, snakes_positions)
-    state = np.array(snake_map)
     state = np.squeeze(snake_map, axis=2)
 
     observations = np.zeros((1, obs_dim))  # todo

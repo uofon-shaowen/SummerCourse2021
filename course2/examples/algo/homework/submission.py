@@ -7,7 +7,7 @@ import os
 
 # todo
 # Once start to train, u can get saved model. Here we just say it is q_table.pth.
-q_table = os.path.dirname(os.path.abspath(__file__)) + '/q_table.pth'
+q_table = os.path.dirname(os.path.abspath(__file__)) + os.sep +'q_1000.pth'
 q_values = np.loadtxt(q_table, delimiter=",")
 
 
@@ -23,7 +23,7 @@ def action_from_algo_to_env(joint_action):
 
 # todo
 def behaviour_policy(q):
-    pass
+    return np.argmax(q)
 
 
 # todo
@@ -34,4 +34,5 @@ def epsilon_greedy(q_values):
 # todo
 def my_controller(observation, action_space, is_act_continuous=False):
     obs = observation['obs']
-    pass
+    action = behaviour_policy(q_values[obs, :])
+    return action_from_algo_to_env(action)
